@@ -80,7 +80,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(40, 13);
             this.label2.TabIndex = 4;
-            this.label2.Text = "Estado";
+            this.label2.Text = "Listo!!!";
             // 
             // label3
             // 
@@ -113,6 +113,7 @@
             this.Controls.Add(this.button1);
             this.Name = "Form1";
             this.Text = "Ubicomp";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
