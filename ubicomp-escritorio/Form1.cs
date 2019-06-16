@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -7,10 +11,10 @@ namespace ubicomp_escritorio
 {
     public partial class Form1 : Form
     {
-        System.IO.Ports.SerialPort arduino;
-        List<Data> values;
-        Thread t;
-
+        private List<Data> values;
+        private static readonly HttpClient client = new HttpClient();
+        private System.IO.Ports.SerialPort arduino;
+        private Thread t;
         public Form1()
         {
             InitializeComponent();
@@ -49,6 +53,24 @@ namespace ubicomp_escritorio
             }
 
             System.IO.File.WriteAllLines(System.IO.Directory.GetCurrentDirectory() + "\\" + textBox1.Text.Trim() + ".txt", lines);
+            label2.Text = "Enviando al servidor";
+            string output = JsonConvert.SerializeObject(values);
+
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://localhost:44366/api/Values");
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "POST";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                streamWriter.Write("{ \"Name\":\"" + textBox1.Text.Trim() + "\", \"sensor\":" + output + "}");
+            }
+
+            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            {
+                var result = streamReader.ReadToEnd();
+            }
+
             button1.Enabled = true;
             label2.Text = "Listo!!!";
         }

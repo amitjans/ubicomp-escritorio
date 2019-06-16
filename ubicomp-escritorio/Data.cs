@@ -8,25 +8,25 @@ namespace ubicomp_escritorio
 {
     class Data
     {
-        public int Value { get; set; }
+        public int Gsr_average { get; set; }
 
         public long Time { get; set; }
 
-        public int Resistance {
+        public int Hr_ohm {
             get {
-                return ((1024 + 2 * Value) * 10000) / (512 - Value);
+                return ((1024 + 2 * Gsr_average) * 10000) / (512 - Gsr_average);
             }
         }
 
-        public Data(int value)
+        public Data(int gsr_average)
         {
-            this.Value = value;
+            this.Gsr_average = gsr_average;
             Time = DateTime.Now.Ticks;
         }
 
         public override string ToString()
         {
-            return Time + " " + Value + " " + Resistance;
+            return Time + " " + Gsr_average + " " + Hr_ohm;
         }
     }
 }
