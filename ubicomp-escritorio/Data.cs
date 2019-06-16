@@ -10,6 +10,8 @@ namespace ubicomp_escritorio
     {
         public int Value { get; set; }
 
+        public long Time { get; set; }
+
         public int Resistance {
             get {
                 return ((1024 + 2 * Value) * 10000) / (512 - Value);
@@ -19,11 +21,12 @@ namespace ubicomp_escritorio
         public Data(int value)
         {
             this.Value = value;
+            Time = DateTime.Now.Ticks;
         }
 
         public override string ToString()
         {
-            return Value + " " + Resistance;
+            return Time + " " + Value + " " + Resistance;
         }
     }
 }
