@@ -40,7 +40,7 @@ namespace ubicomp_escritorio
             }
             t.Join();
             List<string> lines = new List<string>();
-            lines.Add("Id ");
+            lines.Add("id gsr_average hr_ohm");
             for (int i = 0; i < values.Count; i++)
             {
                 lines.Add(i + " " + values[i].ToString());
