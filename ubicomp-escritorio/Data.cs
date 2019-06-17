@@ -14,7 +14,7 @@ namespace ubicomp_escritorio
 
         public int Hr_ohm {
             get {
-                return ((1024 + 2 * Gsr_average) * 10000) / (512 - Gsr_average);
+                return (Gsr_average != 512 ? ((1024 + 2 * Gsr_average) * 10000) / (512 - Gsr_average) : 0);
             }
         }
 
