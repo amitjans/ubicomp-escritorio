@@ -56,7 +56,7 @@ namespace ubicomp_escritorio
             label2.Text = "Enviando al servidor";
             string output = JsonConvert.SerializeObject(values);
 
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://localhost:44366/api/Values");
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://ubicomp.azurewebsites.net/api/Values");
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "POST";
 
