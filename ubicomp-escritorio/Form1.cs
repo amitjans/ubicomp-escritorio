@@ -11,12 +11,15 @@ namespace ubicomp_escritorio
 {
     public partial class Form1 : Form
     {
+        private delegate void SafeCallDelegate();
         private bool conectado;
         private bool grabar;
         private List<Data> values;
         private static readonly HttpClient client = new HttpClient();
         private System.IO.Ports.SerialPort arduino;
         private Thread t;
+
+        private long init;
 
         public Form1()
         {
@@ -30,12 +33,15 @@ namespace ubicomp_escritorio
             button2.Enabled = false;
             conectado = false;
             grabar = false;
+            CheckForIllegalCrossThreadCalls = false;
+            init = 0;
         }
 
         private void Button1_Click(object sender, EventArgs e)
         {
             values = new List<Data>();
             grabar = true;
+            init = 0;
             label2.Text = "Recibiendo datos";
             button1.Enabled = false;
             button2.Enabled = true;
@@ -45,12 +51,27 @@ namespace ubicomp_escritorio
         {
             label2.Text = "Deteniendo";
             grabar = false;
+            init = 0;
             label2.Text = "Guardando datos";
+
+            Guardar();
+
+            button1.Enabled = true;
+            button2.Enabled = false;
+            label2.Text = "Listo!!!";
+        }
+
+        public void Guardar() {
             List<string> lines = new List<string>();
-            lines.Add("id;time;gsr_average;hr_ohm");
+            lines.Add("id;time;gsr_average;siemens");
             for (int i = 0; i < values.Count; i++)
             {
                 lines.Add(i + ";" + values[i].ToString());
+            }
+
+            if (string.IsNullOrEmpty(textBox1.Text.Trim()))
+            {
+                textBox1.Text = "Sessión " + new DateTime(values[0].Time).ToString("hh-mm-ss");
             }
 
             string output = "{ \"Name\":\"" + textBox1.Text.Trim() + "\", \"sensor\":" + JsonConvert.SerializeObject(values) + "}";
@@ -59,24 +80,27 @@ namespace ubicomp_escritorio
             System.IO.File.WriteAllText(System.IO.Directory.GetCurrentDirectory() + "\\" + textBox1.Text.Trim() + ".json", output);
 
             label2.Text = "Enviando al servidor";
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://ubicomp.azurewebsites.net/api/Values");
-            httpWebRequest.ContentType = "application/json";
-            httpWebRequest.Method = "POST";
-
-            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            try
             {
-                streamWriter.Write(output);
-            }
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://ubicomp.azurewebsites.net/api/Values");
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
 
-            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(output);
+                }
+
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                //using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                //{
+                //    var result = streamReader.ReadToEnd();
+                //}
+            }
+            catch (Exception)
             {
-                var result = streamReader.ReadToEnd();
+                Console.WriteLine("Upps. A ocurrido un error al enviar los datos al servidor. Verifique si se enviaron y en caso de que no utilize el archivo .json generado");
             }
-
-            button1.Enabled = true;
-            button2.Enabled = false;
-            label2.Text = "Listo!!!";
         }
 
         public void ThreadProc()
@@ -89,6 +113,16 @@ namespace ubicomp_escritorio
                     if (grabar)
                     {
                         values.Add(temp);
+                        if (init == 0)
+                        {
+                            init = temp.Time + (long) (numericUpDown1.Value * 10000000);
+                        } else if (init < temp.Time)
+                        {
+                            grabar = false;
+                            button2.Enabled = false;
+                            button1.Enabled = true;
+                            Guardar();
+                        }
                     }
                     Console.WriteLine(temp.ToStringWithHourFormat());
                     Thread.Sleep(0);

@@ -8,11 +8,18 @@ namespace ubicomp_escritorio
 
         public long Time { get; set; }
 
-        public int Hr_ohm
+        public float Siemens
         {
             get
             {
-                return (Gsr_average != 512 ? ((1024 + 2 * Gsr_average) * 10000) / (512 - Gsr_average) : 0);
+                try
+                {
+                    return (float) ((1 / (double) (((1024 + 2 * Gsr_average) * 10000) / (512 - Gsr_average))) * 1000000);
+                }
+                catch (Exception e)
+                {
+                    return 0;
+                }
             }
         }
 
@@ -24,12 +31,12 @@ namespace ubicomp_escritorio
 
         public override string ToString()
         {
-            return Time + ";" + Gsr_average + ";" + Hr_ohm;
+            return Time + ";" + Gsr_average + ";" + Siemens;
         }
 
         public string ToStringWithHourFormat()
         {
-            return new DateTime(Time).ToString("hh:mm:ss") + ";" + Gsr_average + ";" + Hr_ohm;
+            return new DateTime(Time).ToString("hh:mm:ss") + ";" + Gsr_average + ";" + Siemens;
         }
     }
 }
