@@ -6,17 +6,20 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Windows.Forms;
+using System.Net.Sockets;
+using System.Text;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace ubicomp_escritorio
 {
     public partial class Form1 : Form
     {
-        private delegate void SafeCallDelegate();
         private bool conectado;
         private bool grabar;
         private List<Data> values;
         private static readonly HttpClient client = new HttpClient();
         private System.IO.Ports.SerialPort arduino;
+        private Thread s;
         private Thread t;
 
         private long init;
@@ -35,6 +38,10 @@ namespace ubicomp_escritorio
             grabar = false;
             CheckForIllegalCrossThreadCalls = false;
             init = 0;
+            s = new Thread(new ThreadStart(ThreadSockets));
+            s.Start();
+            chart1.Series["Series1"].ChartType = SeriesChartType.Line;
+            chart1.Titles.Add("Siemens");
         }
 
         private void Button1_Click(object sender, EventArgs e)
@@ -110,6 +117,8 @@ namespace ubicomp_escritorio
                 while (conectado)
                 {
                     var temp = new Data(int.Parse(arduino.ReadLine()));
+                    chart1.Series["Series1"].Points.AddXY(new DateTime(temp.Time).ToString("mm:ss"), (double)temp.Siemens);
+                    chart1.Update();
                     if (grabar)
                     {
                         values.Add(temp);
@@ -125,6 +134,45 @@ namespace ubicomp_escritorio
                         }
                     }
                     Console.WriteLine(temp.ToStringWithHourFormat());
+                    Thread.Sleep(0);
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        public void ThreadSockets()
+        {
+            try
+            {
+                Socket listen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                Socket conexion;
+                IPEndPoint connect = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 6400);
+
+                listen.Bind(connect);
+                listen.Listen(10);
+                conexion = listen.Accept();
+                while (true)
+                {
+                    var recibir_info = new byte[100];
+                    var data = "";
+                    var array_size = 0;
+
+                    array_size = conexion.Receive(recibir_info, 0, recibir_info.Length, 0);
+                    Array.Resize(ref recibir_info, array_size);
+                    data = Encoding.Default.GetString(recibir_info);
+                    Console.WriteLine(data);
+                    var command = data.Split(":"[0])[0];
+                    if (command.Equals("start"))
+                    {
+                        textBox1.Text = data.Split(":"[0])[1];
+                        numericUpDown1.Value = 1000;
+                        button1.PerformClick();
+                    } else if (command.Equals("stop"))
+                    {
+                        button2.PerformClick();
+                    }
                     Thread.Sleep(0);
                 }
             }
