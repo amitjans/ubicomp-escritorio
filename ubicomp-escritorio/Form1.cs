@@ -40,8 +40,6 @@ namespace ubicomp_escritorio
             init = 0;
             s = new Thread(new ThreadStart(ThreadSockets));
             s.Start();
-            chart1.Series["Series1"].ChartType = SeriesChartType.Line;
-            chart1.Titles.Add("Siemens");
         }
 
         private void Button1_Click(object sender, EventArgs e)
@@ -117,8 +115,19 @@ namespace ubicomp_escritorio
                 while (conectado)
                 {
                     var temp = new Data(int.Parse(arduino.ReadLine()));
-                    chart1.Series["Series1"].Points.AddXY(new DateTime(temp.Time).ToString("mm:ss"), (double)temp.Siemens);
-                    chart1.Update();
+                    try
+                    {
+                        chart1.Series["Siemens"].Points.AddXY(new DateTime(temp.Time).ToString("mm:ss"), (double)temp.Siemens);
+                        if (chart1.Series["Siemens"].Points.Count > 20)
+                        {
+                            chart1.Series["Siemens"].Points.RemoveAt(0);
+                        }
+                        chart1.Update();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     if (grabar)
                     {
                         values.Add(temp);
@@ -169,11 +178,13 @@ namespace ubicomp_escritorio
                         textBox1.Text = data.Split(":"[0])[1];
                         numericUpDown1.Value = 1000;
                         button1.PerformClick();
-                    } else if (command.Equals("stop"))
+                    }
+                    else if (command.Equals("stop"))
                     {
                         button2.PerformClick();
                     }
                     Thread.Sleep(0);
+
                 }
             }
             catch (Exception)
