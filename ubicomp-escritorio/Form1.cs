@@ -8,7 +8,6 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Net.Sockets;
 using System.Text;
-using System.Windows.Forms.DataVisualization.Charting;
 
 namespace ubicomp_escritorio
 {
@@ -121,6 +120,7 @@ namespace ubicomp_escritorio
                         if (chart1.Series["Siemens"].Points.Count > 20)
                         {
                             chart1.Series["Siemens"].Points.RemoveAt(0);
+                            chart1.ResetAutoValues();
                         }
                         chart1.Update();
                     }
@@ -184,7 +184,6 @@ namespace ubicomp_escritorio
                         button2.PerformClick();
                     }
                     Thread.Sleep(0);
-
                 }
             }
             catch (Exception)

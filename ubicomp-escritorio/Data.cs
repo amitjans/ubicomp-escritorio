@@ -16,7 +16,7 @@ namespace ubicomp_escritorio
                 {
                     return (float) ((1 / (double) (((1024 + 2 * Gsr_average) * 10000) / (512 - Gsr_average))) * 1000000);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     return 0;
                 }
