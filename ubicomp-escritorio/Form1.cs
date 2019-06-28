@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
-using System.Windows.Forms;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace ubicomp_escritorio
 {
@@ -20,6 +20,7 @@ namespace ubicomp_escritorio
         private System.IO.Ports.SerialPort arduino;
         private Thread s;
         private Thread t;
+        private List<DataPoints> data = new List<DataPoints>();
 
         private long init;
 
@@ -65,7 +66,8 @@ namespace ubicomp_escritorio
             label2.Text = "Listo!!!";
         }
 
-        public void Guardar() {
+        public void Guardar()
+        {
             List<string> lines = new List<string>();
             lines.Add("id;time;gsr_average;siemens");
             for (int i = 0; i < values.Count; i++)
@@ -116,13 +118,15 @@ namespace ubicomp_escritorio
                     var temp = new Data(int.Parse(arduino.ReadLine()));
                     try
                     {
-                        chart1.Series["Siemens"].Points.AddXY(new DateTime(temp.Time).ToString("mm:ss"), (double)temp.Siemens);
-                        if (chart1.Series["Siemens"].Points.Count > 20)
+                        data.Add(new DataPoints(new DateTime(temp.Time).ToString("mm:ss"), (double)temp.Siemens));
+                        if (data.Count > 20)
                         {
-                            chart1.Series["Siemens"].Points.RemoveAt(0);
-                            chart1.ResetAutoValues();
+                            data.RemoveAt(0);
                         }
-                        chart1.Update();
+                        if (chart1.IsHandleCreated)
+                        {
+                            this.Invoke((MethodInvoker)delegate { UpdateChart(); });
+                        }
                     }
                     catch (Exception e)
                     {
@@ -133,8 +137,9 @@ namespace ubicomp_escritorio
                         values.Add(temp);
                         if (init == 0)
                         {
-                            init = temp.Time + (long) (numericUpDown1.Value * 10000000);
-                        } else if (init < temp.Time)
+                            init = temp.Time + (long)(numericUpDown1.Value * 10000000);
+                        }
+                        else if (init < temp.Time)
                         {
                             grabar = false;
                             button2.Enabled = false;
@@ -149,6 +154,16 @@ namespace ubicomp_escritorio
             catch (Exception)
             {
             }
+        }
+
+        private void UpdateChart()
+        {
+            chart1.Series["Siemens"].Points.Clear();
+            for (int i = 0; i < data.Count; i++)
+            {
+                chart1.Series["Siemens"].Points.AddXY(data[i].X, data[i].Y);
+            }
+            //chart1.ResetAutoValues();
         }
 
         public void ThreadSockets()
@@ -204,7 +219,7 @@ namespace ubicomp_escritorio
             if (arduino.IsOpen)
             {
                 conectado = false;
-                t.Join();
+                t.Join(100);
                 arduino.Close();
                 button3.Text = "Conectar";
                 button1.Enabled = false;

@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data.cs" />
+    <Compile Include="DataPoints.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
