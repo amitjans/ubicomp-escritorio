@@ -21,6 +21,7 @@ namespace ubicomp_escritorio
         private Thread s;
         private Thread t;
         private List<DataPoints> data = new List<DataPoints>();
+        private string ip;
 
         private long init;
 
@@ -38,6 +39,8 @@ namespace ubicomp_escritorio
             grabar = false;
             CheckForIllegalCrossThreadCalls = false;
             init = 0;
+            ip = GetIP();
+            label5.Text = "Dirección local: " + ip;
             s = new Thread(new ThreadStart(ThreadSockets));
             s.Start();
         }
@@ -172,7 +175,7 @@ namespace ubicomp_escritorio
             {
                 Socket listen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 Socket conexion;
-                IPEndPoint connect = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 6400);
+                IPEndPoint connect = new IPEndPoint(IPAddress.Parse(ip), 6400);
 
                 listen.Bind(connect);
                 listen.Listen(10);
@@ -236,5 +239,17 @@ namespace ubicomp_escritorio
                 t.Start();
             }
         }
+
+        private string GetIP() {
+
+            var ips = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
+            foreach (var item in ips)
+            {
+                if (item.AddressFamily.ToString() != ProtocolFamily.InterNetworkV6.ToString()) {
+                    return item.ToString();
+                }
+            }
+            return "No se encontraron direciones de IPv4";
+        } 
     }
 }
