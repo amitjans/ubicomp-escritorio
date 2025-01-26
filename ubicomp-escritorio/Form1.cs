@@ -179,30 +179,42 @@ namespace ubicomp_escritorio
 
                 listen.Bind(connect);
                 listen.Listen(10);
-                conexion = listen.Accept();
                 while (true)
                 {
-                    var recibir_info = new byte[100];
-                    var data = "";
-                    var array_size = 0;
+                    conexion = listen.Accept();
+                    while (true)
+                    {
+                        var recibir_info = new byte[100];
+                        var data = "";
+                        var array_size = 0;
 
-                    array_size = conexion.Receive(recibir_info, 0, recibir_info.Length, 0);
-                    Array.Resize(ref recibir_info, array_size);
-                    data = Encoding.Default.GetString(recibir_info);
-                    Console.WriteLine(data);
-                    var command = data.Split(":"[0])[0];
-                    if (command.Equals("start"))
-                    {
-                        textBox1.Text = data.Split(":"[0])[1];
-                        numericUpDown1.Value = 1000;
-                        button1.PerformClick();
+                        array_size = conexion.Receive(recibir_info, 0, recibir_info.Length, 0);
+                        Array.Resize(ref recibir_info, array_size);
+                        data = Encoding.Default.GetString(recibir_info);
+                        Console.WriteLine(data);
+                        var command = data.Split(":"[0])[0];
+                        if (command.Equals("start"))
+                        {
+                            textBox1.Text = data.Split(":"[0])[1];
+                            numericUpDown1.Value = 1000;
+                            button1.PerformClick();
+                        }
+                        else if (command.Equals("stop"))
+                        {
+                            if (data.Split(":"[0])[1].Equals("last"))
+                            {
+                                conexion.Disconnect(true);
+                                break;
+                            }
+                            else
+                            {
+                                button2.PerformClick();
+                            }
+                        }
+                        Thread.Sleep(0);
                     }
-                    else if (command.Equals("stop"))
-                    {
-                        button2.PerformClick();
-                    }
-                    Thread.Sleep(0);
                 }
+                
             }
             catch (Exception)
             {
