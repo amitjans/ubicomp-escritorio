@@ -20,9 +20,10 @@ namespace ubicomp_escritorio
         private System.IO.Ports.SerialPort arduino;
         private Thread s;
         private Thread t;
+        private Thread web;
         private List<DataPoints> data = new List<DataPoints>();
         private string ip;
-
+        private string output;
         private long init;
 
         public Form1()
@@ -83,33 +84,35 @@ namespace ubicomp_escritorio
                 textBox1.Text = "Sessión " + new DateTime(values[0].Time).ToString("hh-mm-ss");
             }
 
-            string output = "{ \"Name\":\"" + textBox1.Text.Trim() + "\", \"sensor\":" + JsonConvert.SerializeObject(values) + "}";
+            output = "{ \"Name\":\"" + textBox1.Text.Trim() + "\", \"sensor\":" + JsonConvert.SerializeObject(values) + "}";
 
             System.IO.File.WriteAllLines(System.IO.Directory.GetCurrentDirectory() + "\\" + textBox1.Text.Trim() + ".csv", lines);
             System.IO.File.WriteAllText(System.IO.Directory.GetCurrentDirectory() + "\\" + textBox1.Text.Trim() + ".json", output);
 
             label2.Text = "Enviando al servidor";
-            try
-            {
-                var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://ubicomp.azurewebsites.net/api/Values");
-                httpWebRequest.ContentType = "application/json";
-                httpWebRequest.Method = "POST";
+            web = new Thread(new ThreadStart(ThreadWeb));
+            web.Start();
+            //try
+            //{
+            //    var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://ubicomp.azurewebsites.net/api/Values");
+            //    httpWebRequest.ContentType = "application/json";
+            //    httpWebRequest.Method = "POST";
 
-                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-                {
-                    streamWriter.Write(output);
-                }
+            //    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            //    {
+            //        streamWriter.Write(output);
+            //    }
 
-                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-                //using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                //{
-                //    var result = streamReader.ReadToEnd();
-                //}
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Upps. A ocurrido un error al enviar los datos al servidor. Verifique si se enviaron y en caso de que no utilize el archivo .json generado");
-            }
+            //    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+            //    //using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            //    //{
+            //    //    var result = streamReader.ReadToEnd();
+            //    //}
+            //}
+            //catch (Exception)
+            //{
+            //    Console.WriteLine("Upps. A ocurrido un error al enviar los datos al servidor. Verifique si se enviaron y en caso de que no utilize el archivo .json generado");
+            //}
         }
 
         public void ThreadProc()
@@ -215,6 +218,27 @@ namespace ubicomp_escritorio
                     }
                 }
                 
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Upps. A ocurrido un error al enviar los datos al servidor. Verifique si se enviaron y en caso de que no utilize el archivo .json generado");
+            }
+        }
+
+        public void ThreadWeb()
+        {
+            try
+            {
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://ubicomp.azurewebsites.net/api/Values");
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(output);
+                }
+
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
             }
             catch (Exception)
             {
